@@ -836,12 +836,18 @@ class TaskComments(Resource):
         """
         Lists the task comments.
         """
+        user_id = get_jwt_identity()
 
         response = TaskCommentDAO.get_all_task_comments_by_task_id(
-            get_jwt_identity(), task_id, relation_id
+            user_id, task_id, relation_id
         )
 
         if isinstance(response, tuple):
             return response
+            
+        for task in response:
+            task['user'] = userDAO.get_user(task['user_id'])
+            task['sent_by_me'] = user_id==task['user_id'] 
+        
         else:
             return marshal(response, task_comments_model), HTTPStatus.OK
